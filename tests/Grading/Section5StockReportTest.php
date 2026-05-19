@@ -2,39 +2,18 @@
 
 namespace Tests\Grading;
 
-use Database\Seeders\CategorySeeder;
-use Database\Seeders\ProductSeeder;
-use Database\Seeders\StockMovementSeeder;
-use Database\Seeders\UnitSeeder;
-use Database\Seeders\UserSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\Grading\Concerns\InteractsWithApi;
-use Tests\Grading\Concerns\RecordsCriterionScore;
-use Tests\TestCase;
-
 /**
  * Section 5 — Stock Report (3.46 points, 6 criteria)
+ *
+ * Baseline data dari GradingTestCase: full user/unit/category/product/stock_movement.
  *
  * Response shape acuan (json-response.pdf):
  *   E1a /api/reports/summary-by-category/out 200:
  *       { data:{ summary:[ { category:{ id,name,icon,color,type:"OUT",created_at,updated_at }, quantity } ] } }
  *   E2a /api/reports/summary-by-category/in 200: idem dengan type:"IN".
  */
-class Section5StockReportTest extends TestCase
+class Section5StockReportTest extends GradingTestCase
 {
-    use InteractsWithApi, RecordsCriterionScore, RefreshDatabase;
-
-    private function seedAll(): void
-    {
-        $this->seedSafe([
-            UserSeeder::class,
-            UnitSeeder::class,
-            CategorySeeder::class,
-            ProductSeeder::class,
-            StockMovementSeeder::class,
-        ]);
-    }
-
     /**
      * @criterion 5.1
      *
@@ -43,7 +22,6 @@ class Section5StockReportTest extends TestCase
     public function test_5_1_get_summary_out_returns_200_with_array(): void
     {
         $max = 0.577;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->getJson('/api/reports/summary-by-category/out', $this->authHeaders($token)));
@@ -73,7 +51,6 @@ class Section5StockReportTest extends TestCase
     public function test_5_2_out_summary_has_category_and_quantity(): void
     {
         $max = 0.865;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->getJson('/api/reports/summary-by-category/out', $this->authHeaders($token)));
@@ -122,7 +99,6 @@ class Section5StockReportTest extends TestCase
     public function test_5_3_out_supports_month_year_filter(): void
     {
         $max = 0.288;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $rBoth = $this->safe(fn () => $this->getJson('/api/reports/summary-by-category/out?month=7&year=2025', $this->authHeaders($token)));
@@ -161,7 +137,6 @@ class Section5StockReportTest extends TestCase
     public function test_5_4_get_summary_in_returns_200_with_array(): void
     {
         $max = 0.577;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->getJson('/api/reports/summary-by-category/in', $this->authHeaders($token)));
@@ -191,7 +166,6 @@ class Section5StockReportTest extends TestCase
     public function test_5_5_in_summary_has_category_and_quantity(): void
     {
         $max = 0.865;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->getJson('/api/reports/summary-by-category/in', $this->authHeaders($token)));
@@ -240,7 +214,6 @@ class Section5StockReportTest extends TestCase
     public function test_5_6_in_supports_month_year_filter(): void
     {
         $max = 0.288;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $rBoth = $this->safe(fn () => $this->getJson('/api/reports/summary-by-category/in?month=7&year=2025', $this->authHeaders($token)));

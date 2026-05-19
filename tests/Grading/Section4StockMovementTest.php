@@ -2,20 +2,10 @@
 
 namespace Tests\Grading;
 
-use Database\Seeders\CategorySeeder;
-use Database\Seeders\ProductSeeder;
-use Database\Seeders\StockMovementSeeder;
-use Database\Seeders\UnitSeeder;
-use Database\Seeders\UserSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\Grading\Concerns\InteractsWithApi;
-use Tests\Grading\Concerns\RecordsCriterionScore;
-use Tests\TestCase;
-
 /**
  * Section 4 — Stock Movement (6.92 points, 12 criteria)
  *
- * Catatan (dari StockMovementSeeder):
+ * Baseline data dari GradingTestCase (StockMovementSeeder):
  *   - Movement id 23 → product_id 1 (milik Budi/user 1)
  *   - Movement id 1  → product_id 24 (milik Dedi/user 5)
  *
@@ -25,21 +15,8 @@ use Tests\TestCase;
  *   D2a DELETE 200: { message:"Stock movement deleted successful" }
  *   D3a GET 200:    { current_page, data:[ {..., product:{...}, category:{...}} ], from, last_page, per_page, to, total }
  */
-class Section4StockMovementTest extends TestCase
+class Section4StockMovementTest extends GradingTestCase
 {
-    use InteractsWithApi, RecordsCriterionScore, RefreshDatabase;
-
-    private function seedBasic(): void
-    {
-        $this->seedSafe([UserSeeder::class, UnitSeeder::class, CategorySeeder::class, ProductSeeder::class]);
-    }
-
-    private function seedAll(): void
-    {
-        $this->seedBasic();
-        $this->seedSafe(StockMovementSeeder::class);
-    }
-
     private function validPayload(array $overrides = []): array
     {
         return array_merge([
@@ -61,7 +38,6 @@ class Section4StockMovementTest extends TestCase
     public function test_4_1_post_stock_movement_creates_returns_201(): void
     {
         $max = 0.865;
-        $this->seedBasic();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->postJson('/api/stock-movements', $this->validPayload(), $this->authHeaders($token)));
@@ -94,7 +70,6 @@ class Section4StockMovementTest extends TestCase
     public function test_4_2_validates_product_id_must_exist(): void
     {
         $max = 0.577;
-        $this->seedBasic();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->postJson('/api/stock-movements', $this->validPayload([
@@ -123,7 +98,6 @@ class Section4StockMovementTest extends TestCase
     public function test_4_3_validates_category_id_must_exist(): void
     {
         $max = 0.577;
-        $this->seedBasic();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->postJson('/api/stock-movements', $this->validPayload([
@@ -154,7 +128,6 @@ class Section4StockMovementTest extends TestCase
     public function test_4_4_validates_quantity_integer_min_1(): void
     {
         $max = 0.577;
-        $this->seedBasic();
         $token = $this->loginAs();
 
         $r1 = $this->safe(fn () => $this->postJson('/api/stock-movements', $this->validPayload([
@@ -192,7 +165,6 @@ class Section4StockMovementTest extends TestCase
     public function test_4_5_validates_date_format(): void
     {
         $max = 0.287;
-        $this->seedBasic();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->postJson('/api/stock-movements', $this->validPayload([
@@ -221,7 +193,6 @@ class Section4StockMovementTest extends TestCase
     public function test_4_6_note_field_is_optional(): void
     {
         $max = 0.288;
-        $this->seedBasic();
         $token = $this->loginAs();
 
         $payload = $this->validPayload();
@@ -251,7 +222,6 @@ class Section4StockMovementTest extends TestCase
     public function test_4_7_delete_own_movement_returns_200(): void
     {
         $max = 0.577;
-        $this->seedAll();
         $token = $this->loginAs(); // budi
 
         $r = $this->safe(fn () => $this->deleteJson('/api/stock-movements/23', [], $this->authHeaders($token)));
@@ -279,7 +249,6 @@ class Section4StockMovementTest extends TestCase
     public function test_4_8_delete_returns_403_or_404_correctly(): void
     {
         $max = 0.577;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $forbidden = $this->safe(fn () => $this->deleteJson('/api/stock-movements/1', [], $this->authHeaders($token)));
@@ -317,7 +286,6 @@ class Section4StockMovementTest extends TestCase
     public function test_4_9_get_movements_paginated_default_25(): void
     {
         $max = 0.865;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->getJson('/api/stock-movements', $this->authHeaders($token)));
@@ -353,7 +321,6 @@ class Section4StockMovementTest extends TestCase
     public function test_4_10_movements_sorted_by_date_desc(): void
     {
         $max = 0.577;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->getJson('/api/stock-movements', $this->authHeaders($token)));
@@ -412,7 +379,6 @@ class Section4StockMovementTest extends TestCase
     public function test_4_11_filter_by_month_and_year(): void
     {
         $max = 0.865;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->getJson('/api/stock-movements?month=7&year=2025', $this->authHeaders($token)));
@@ -469,7 +435,6 @@ class Section4StockMovementTest extends TestCase
     public function test_4_12_response_includes_nested_product_and_category(): void
     {
         $max = 0.288;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->getJson('/api/stock-movements', $this->authHeaders($token)));

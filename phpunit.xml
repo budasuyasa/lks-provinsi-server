@@ -14,6 +14,7 @@
         <testsuite name="Grading">
             <directory>tests/Grading</directory>
             <exclude>tests/Grading/Concerns</exclude>
+            <exclude>tests/Grading/GradingTestCase.php</exclude>
             <exclude>tests/Grading/criteria.php</exclude>
         </testsuite>
     </testsuites>

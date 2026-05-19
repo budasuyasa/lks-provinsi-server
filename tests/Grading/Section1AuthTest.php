@@ -2,15 +2,10 @@
 
 namespace Tests\Grading;
 
-use Database\Seeders\UnitSeeder;
-use Database\Seeders\UserSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\Grading\Concerns\InteractsWithApi;
-use Tests\Grading\Concerns\RecordsCriterionScore;
-use Tests\TestCase;
-
 /**
  * Section 1 — Authentication (5.19 points, 11 criteria)
+ *
+ * Baseline data dari GradingTestCase: 5 users termasuk budi@webtech.id / password.
  *
  * Response shape acuan (json-response.pdf):
  *   A1a Register 201: { status, message, data:{ id, name, email, created_at, updated_at, token } }
@@ -20,10 +15,8 @@ use Tests\TestCase;
  *   A3a Logout 200:   { status, message:"Logout successful" }
  *   A3b Logout 401:   { status:"error", message:"Unauthenticated." }
  */
-class Section1AuthTest extends TestCase
+class Section1AuthTest extends GradingTestCase
 {
-    use InteractsWithApi, RecordsCriterionScore, RefreshDatabase;
-
     /**
      * @criterion 1.1
      *
@@ -146,7 +139,6 @@ class Section1AuthTest extends TestCase
     public function test_1_4_register_validates_email_format_and_uniqueness(): void
     {
         $max = 0.288;
-        $this->seedSafe(UserSeeder::class);
 
         $r1 = $this->safe(fn () => $this->postJson('/api/auth/register', [
             'full_name' => 'X', 'email' => 'not-an-email', 'password' => 'secret123',
@@ -214,7 +206,6 @@ class Section1AuthTest extends TestCase
     public function test_1_6_login_authenticates_returns_token(): void
     {
         $max = 0.577;
-        $this->seedSafe(UserSeeder::class);
 
         $response = $this->safe(fn () => $this->postJson('/api/auth/login', [
             'email' => 'budi@webtech.id', 'password' => 'password',
@@ -250,7 +241,6 @@ class Section1AuthTest extends TestCase
     public function test_1_7_login_returns_401_on_wrong_credentials(): void
     {
         $max = 0.288;
-        $this->seedSafe(UserSeeder::class);
 
         $response = $this->safe(fn () => $this->postJson('/api/auth/login', [
             'email' => 'budi@webtech.id', 'password' => 'wrong-password',
@@ -284,7 +274,6 @@ class Section1AuthTest extends TestCase
     public function test_1_8_logout_deactivates_current_device_token_only(): void
     {
         $max = 0.865;
-        $this->seedSafe([UserSeeder::class, UnitSeeder::class]);
 
         $token1 = $this->loginAs();
         $token2 = $this->loginAs();
@@ -332,7 +321,6 @@ class Section1AuthTest extends TestCase
     public function test_1_9_logout_returns_200_with_success_message(): void
     {
         $max = 0.288;
-        $this->seedSafe(UserSeeder::class);
         $token = $this->loginAs();
 
         if (! $token) {
@@ -368,7 +356,6 @@ class Section1AuthTest extends TestCase
     public function test_1_10_sanctum_token_works_as_bearer(): void
     {
         $max = 0.577;
-        $this->seedSafe([UserSeeder::class, UnitSeeder::class]);
         $token = $this->loginAs();
 
         if (! $token) {

@@ -2,40 +2,20 @@
 
 namespace Tests\Grading;
 
-use Database\Seeders\CategorySeeder;
-use Database\Seeders\ProductSeeder;
-use Database\Seeders\StockMovementSeeder;
-use Database\Seeders\UnitSeeder;
-use Database\Seeders\UserSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Tests\Grading\Concerns\InteractsWithApi;
-use Tests\Grading\Concerns\RecordsCriterionScore;
-use Tests\TestCase;
 
 /**
  * Section 6 — Cross-cutting Quality (3.47 points, 5 criteria)
+ *
+ * Baseline data dari GradingTestCase: full user/unit/category/product/stock_movement.
  *
  * Pesan kanonik (json-response.pdf):
  *   - 403 → message:"Forbidden access"
  *   - 404 → message:"Not found"
  *   - 422 → message:"Invalid field", errors as object per-field
  */
-class Section6CrossCuttingTest extends TestCase
+class Section6CrossCuttingTest extends GradingTestCase
 {
-    use InteractsWithApi, RecordsCriterionScore, RefreshDatabase;
-
-    private function seedAll(): void
-    {
-        $this->seedSafe([
-            UserSeeder::class,
-            UnitSeeder::class,
-            CategorySeeder::class,
-            ProductSeeder::class,
-            StockMovementSeeder::class,
-        ]);
-    }
-
     /**
      * @criterion 6.1
      *
@@ -46,7 +26,6 @@ class Section6CrossCuttingTest extends TestCase
     public function test_6_1_current_stock_in_increases_out_decreases(): void
     {
         $max = 1.158;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $r0 = $this->safe(fn () => $this->getJson('/api/products/1', $this->authHeaders($token)));
@@ -115,7 +94,6 @@ class Section6CrossCuttingTest extends TestCase
     public function test_6_2_soft_delete_preserves_deleted_at(): void
     {
         $max = 0.578;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $delete = $this->safe(fn () => $this->deleteJson('/api/products/1', [], $this->authHeaders($token)));
@@ -166,7 +144,6 @@ class Section6CrossCuttingTest extends TestCase
     public function test_6_3_pagination_includes_all_metadata(): void
     {
         $max = 0.578;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->getJson('/api/stock-movements', $this->authHeaders($token)));
@@ -206,7 +183,6 @@ class Section6CrossCuttingTest extends TestCase
     public function test_6_4_422_validation_includes_field_specific_errors(): void
     {
         $max = 0.578;
-        $this->seedSafe([UserSeeder::class, UnitSeeder::class]);
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->postJson('/api/products', [
@@ -240,7 +216,6 @@ class Section6CrossCuttingTest extends TestCase
     public function test_6_5_403_and_404_with_correct_messages(): void
     {
         $max = 0.578;
-        $this->seedAll();
         $token = $this->loginAs(); // budi
 
         $r403 = $this->safe(fn () => $this->getJson('/api/products/8', $this->authHeaders($token)));

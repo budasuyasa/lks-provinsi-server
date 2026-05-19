@@ -2,23 +2,15 @@
 
 namespace Tests\Grading;
 
-use Database\Seeders\CategorySeeder;
-use Database\Seeders\ProductSeeder;
-use Database\Seeders\StockMovementSeeder;
-use Database\Seeders\UnitSeeder;
-use Database\Seeders\UserSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Tests\Grading\Concerns\InteractsWithApi;
-use Tests\Grading\Concerns\RecordsCriterionScore;
-use Tests\TestCase;
 
 /**
  * Section 3 — Product CRUD (8.08 points, 12 criteria)
  *
- * Catatan ownership (dari ProductSeeder):
+ * Baseline data dari GradingTestCase:
  *   - user_id 1 (budi) → product 1..7
  *   - user_id 2 (siti) → product 8..12
+ *   - ~625 stock movements untuk verifikasi current_stock
  *
  * Response shape acuan (json-response.pdf):
  *   C1a POST 201:        { data:{ id, user_id, name, unit_code, created_at, updated_at } }
@@ -30,15 +22,8 @@ use Tests\TestCase;
  *   C4a GET list 200:    { data:{ products:[ { id, user_id, name, unit_code, current_stock, ... } ] } }
  *   C5a GET detail 200:  { data:{ id, user_id, name, unit_code, current_stock, ... } }
  */
-class Section3ProductCrudTest extends TestCase
+class Section3ProductCrudTest extends GradingTestCase
 {
-    use InteractsWithApi, RecordsCriterionScore, RefreshDatabase;
-
-    private function seedAll(): void
-    {
-        $this->seedSafe([UserSeeder::class, UnitSeeder::class, ProductSeeder::class]);
-    }
-
     /**
      * @criterion 3.1
      *
@@ -49,7 +34,6 @@ class Section3ProductCrudTest extends TestCase
     public function test_3_1_post_product_creates_returns_201(): void
     {
         $max = 0.866;
-        $this->seedSafe([UserSeeder::class, UnitSeeder::class]);
         $token = $this->loginAs();
 
         $response = $this->safe(fn () => $this->postJson('/api/products', [
@@ -86,7 +70,6 @@ class Section3ProductCrudTest extends TestCase
     public function test_3_2_product_auto_assigned_to_authenticated_user(): void
     {
         $max = 0.577;
-        $this->seedSafe([UserSeeder::class, UnitSeeder::class]);
         $token = $this->loginAs(); // budi → user_id 1
 
         $response = $this->safe(fn () => $this->postJson('/api/products', [
@@ -130,7 +113,6 @@ class Section3ProductCrudTest extends TestCase
     public function test_3_3_product_create_validates_name_and_unit_code(): void
     {
         $max = 0.577;
-        $this->seedSafe([UserSeeder::class, UnitSeeder::class]);
         $token = $this->loginAs();
 
         $r = $this->safe(fn () => $this->postJson('/api/products', [
@@ -170,7 +152,6 @@ class Section3ProductCrudTest extends TestCase
     public function test_3_4_put_product_updates_own_returns_200(): void
     {
         $max = 0.866;
-        $this->seedAll();
         $token = $this->loginAs(); // budi
 
         $response = $this->safe(fn () => $this->putJson('/api/products/1', [
@@ -207,7 +188,6 @@ class Section3ProductCrudTest extends TestCase
     public function test_3_5_update_returns_403_for_other_users_product(): void
     {
         $max = 0.577;
-        $this->seedAll();
         $token = $this->loginAs(); // budi
 
         // Probe happy-path dulu — kalau PUT ke produk sendiri pun 404, artinya
@@ -248,7 +228,6 @@ class Section3ProductCrudTest extends TestCase
     public function test_3_6_update_returns_404_for_non_existent(): void
     {
         $max = 0.288;
-        $this->seedAll();
         $token = $this->loginAs();
 
         // Probe happy-path: kalau PUT ke produk yang valid pun 404, berarti
@@ -290,7 +269,6 @@ class Section3ProductCrudTest extends TestCase
     public function test_3_7_delete_product_soft_deletes_own(): void
     {
         $max = 0.866;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $response = $this->safe(fn () => $this->deleteJson('/api/products/1', [], $this->authHeaders($token)));
@@ -334,7 +312,6 @@ class Section3ProductCrudTest extends TestCase
     public function test_3_8_delete_returns_403_or_404_correctly(): void
     {
         $max = 0.577;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $forbidden = $this->safe(fn () => $this->deleteJson('/api/products/8', [], $this->authHeaders($token)));
@@ -373,7 +350,6 @@ class Section3ProductCrudTest extends TestCase
     public function test_3_9_get_products_returns_only_own(): void
     {
         $max = 0.866;
-        $this->seedAll();
         $token = $this->loginAs(); // budi
 
         $response = $this->safe(fn () => $this->getJson('/api/products', $this->authHeaders($token)));
@@ -418,9 +394,6 @@ class Section3ProductCrudTest extends TestCase
     public function test_3_10_get_products_includes_current_stock(): void
     {
         $max = 0.866;
-        $this->seedAll();
-        $this->seedSafe(CategorySeeder::class);
-        $this->seedSafe(StockMovementSeeder::class);
         $token = $this->loginAs();
 
         $response = $this->safe(fn () => $this->getJson('/api/products', $this->authHeaders($token)));
@@ -466,9 +439,6 @@ class Section3ProductCrudTest extends TestCase
     public function test_3_11_get_product_detail_with_current_stock(): void
     {
         $max = 0.577;
-        $this->seedAll();
-        $this->seedSafe(CategorySeeder::class);
-        $this->seedSafe(StockMovementSeeder::class);
         $token = $this->loginAs();
 
         $response = $this->safe(fn () => $this->getJson('/api/products/1', $this->authHeaders($token)));
@@ -504,7 +474,6 @@ class Section3ProductCrudTest extends TestCase
     public function test_3_12_detail_returns_403_or_404_correctly(): void
     {
         $max = 0.577;
-        $this->seedAll();
         $token = $this->loginAs();
 
         $forbidden = $this->safe(fn () => $this->getJson('/api/products/8', $this->authHeaders($token)));

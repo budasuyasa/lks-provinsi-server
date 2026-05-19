@@ -2,26 +2,18 @@
 
 namespace Tests\Grading;
 
-use Database\Seeders\CategorySeeder;
-use Database\Seeders\UnitSeeder;
-use Database\Seeders\UserSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\Grading\Concerns\InteractsWithApi;
-use Tests\Grading\Concerns\RecordsCriterionScore;
-use Tests\TestCase;
-
 /**
  * Section 2 — Unit & Category (2.88 points, 5 criteria)
+ *
+ * Baseline data dari GradingTestCase: 10 units + 14 categories sudah ter-seed.
  *
  * Response shape acuan (json-response.pdf):
  *   B1a GET /api/units 200:      { data:{ units:[ { id, name, symbol, code, created_at, updated_at } ] } }
  *   B2a GET /api/categories 200: { data:{ categories:[ { id, name, icon, color, type, created_at, updated_at } ] } }
  *   B1b/B2b 401:                 { status:"error", message:"Unauthenticated." }
  */
-class Section2UnitCategoryTest extends TestCase
+class Section2UnitCategoryTest extends GradingTestCase
 {
-    use InteractsWithApi, RecordsCriterionScore, RefreshDatabase;
-
     /**
      * @criterion 2.1
      *
@@ -30,7 +22,6 @@ class Section2UnitCategoryTest extends TestCase
     public function test_2_1_get_units_returns_200_with_array(): void
     {
         $max = 0.576;
-        $this->seedSafe([UserSeeder::class, UnitSeeder::class]);
         $token = $this->loginAs();
 
         $response = $this->safe(fn () => $this->getJson('/api/units', $this->authHeaders($token)));
@@ -60,7 +51,6 @@ class Section2UnitCategoryTest extends TestCase
     public function test_2_2_each_unit_has_required_fields(): void
     {
         $max = 0.576;
-        $this->seedSafe([UserSeeder::class, UnitSeeder::class]);
         $token = $this->loginAs();
 
         $response = $this->safe(fn () => $this->getJson('/api/units', $this->authHeaders($token)));
@@ -104,7 +94,6 @@ class Section2UnitCategoryTest extends TestCase
     public function test_2_3_get_categories_returns_200_with_array(): void
     {
         $max = 0.576;
-        $this->seedSafe([UserSeeder::class, CategorySeeder::class]);
         $token = $this->loginAs();
 
         $response = $this->safe(fn () => $this->getJson('/api/categories', $this->authHeaders($token)));
@@ -134,7 +123,6 @@ class Section2UnitCategoryTest extends TestCase
     public function test_2_4_each_category_has_required_fields(): void
     {
         $max = 0.576;
-        $this->seedSafe([UserSeeder::class, CategorySeeder::class]);
         $token = $this->loginAs();
 
         $response = $this->safe(fn () => $this->getJson('/api/categories', $this->authHeaders($token)));
