@@ -11,6 +11,11 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <testsuite name="Grading">
+            <directory>tests/Grading</directory>
+            <exclude>tests/Grading/Concerns</exclude>
+            <exclude>tests/Grading/criteria.php</exclude>
+        </testsuite>
     </testsuites>
     <source>
         <include>

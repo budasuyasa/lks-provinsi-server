@@ -15,6 +15,7 @@ trait InteractsWithApi
                 'email' => $email,
                 'password' => $password,
             ]);
+
             return $response->json('data.token');
         } catch (\Throwable $e) {
             return null;
@@ -28,7 +29,7 @@ trait InteractsWithApi
     {
         return [
             'Accept' => 'application/json',
-            'Authorization' => 'Bearer ' . ($token ?? 'no-token'),
+            'Authorization' => 'Bearer '.($token ?? 'no-token'),
         ];
     }
 
@@ -63,9 +64,32 @@ trait InteractsWithApi
     {
         try {
             $this->seed($class);
+
             return true;
         } catch (\Throwable $e) {
             return false;
         }
+    }
+
+    /**
+     * True if the response is null (exception during request) or returns a 5xx server error.
+     * A broken endpoint must score 0 — never partial — per scoring convention.
+     */
+    protected function isServerError($response): bool
+    {
+        if ($response === null) {
+            return true;
+        }
+        $status = $response->status();
+
+        return $status >= 500 && $status < 600;
+    }
+
+    /**
+     * True if response is usable: not null and not a 5xx server error.
+     */
+    protected function isUsable($response): bool
+    {
+        return ! $this->isServerError($response);
     }
 }

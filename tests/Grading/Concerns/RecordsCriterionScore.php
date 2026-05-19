@@ -12,8 +12,25 @@ trait RecordsCriterionScore
 
     protected function recordScore(string $criterionId, float $earned): void
     {
-        self::$scores[$criterionId] = round($earned, 3);
-        $this->persistScores();
+        $path = storage_path('grading-scores.json');
+
+        // Static $scores adalah per-class. Supaya hasil semua section tertulis di file,
+        // gabungkan dengan isi file yang sudah ada sebelum menulis ulang.
+        $existing = [];
+        if (file_exists($path)) {
+            $decoded = json_decode((string) file_get_contents($path), true);
+            if (is_array($decoded)) {
+                $existing = $decoded;
+            }
+        }
+
+        $existing[$criterionId] = round($earned, 3);
+        self::$scores = $existing;
+
+        @file_put_contents(
+            $path,
+            json_encode(self::$scores, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+        );
     }
 
     protected function persistScores(): void
